@@ -21,14 +21,18 @@ function sliceVelocity(d,axis){
 //d is the data point {position, velocity,concentration}, axis is ['x','y','z'], scale is optional value to pass to help scale the object size
 //Hint: you might need to pass an additional argument here to scale the new glyph with concentration
 function makeVelocityGlyph(d,axis,scale=1){
-    
+    console.log("d",d)
     let [xv,yv] = sliceVelocity(d,axis);
-    let velocity = scale*Math.sqrt(xv**2 + yv**2);
+    let concentration= d.concentration;
+    let velocity =scale*Math.sqrt(xv**2 + yv**2);
     //draws an arrow scaled by the velocity. we draw straight to the right and then rotate it using transforms
-    let path = 'M ' + velocity + ',' + 0 + ' '
-        + 0 + ',' + -Math.min(3,velocity/3) + ' '
-        + 0 + ',' + Math.min(3,velocity/3);
-
+    let path = 'M ' + concentration + ',' + 0 + ' '
+        + 0 + ',' + -Math.min(2,concentration/2) + ' '
+        + 0 + ',' + Math.min(2,concentration/2)+
+        'M ' + concentration + ',' + 0 + ' ' +
+        'L ' + (concentration - 4) + ',' + -3 + ' ' +
+        'L ' + (concentration - 4) + ',' + 3 + ' ' +
+        'Z';
     //Hint: If you want to add something on top of the arrows, add the code for the new shape onto the path here;
     return path
     
@@ -90,7 +94,7 @@ export default function LinkedViewD3(props){
 
             //limit the data to a maximum size to prevent occlusion
             data.sort((a,b) => bDist(a) - bDist(b));
-            data = data.filter(d=>d.concentration > .3*bounds.maxC)
+            data = data.filter(d=>d.concentration < .8*bounds.maxC)
             if(data.length > maxDots){
                 data = data.slice(0,maxDots);
             }
@@ -113,7 +117,7 @@ export default function LinkedViewD3(props){
 
             //TODO: FIX THE EXTENTS (Hint: this should match the legend)
             let colorScale = d3.scaleLinear()
-                .domain(yExtents)
+                .domain([0,bounds.maxC])
                 .range(props.colorRange);
 
             
@@ -124,8 +128,8 @@ export default function LinkedViewD3(props){
                 .attr('class','glyph')
                 .merge(dots)
                 .transition(100)
-                .attr('d', d => makeVelocityGlyph(d,props.brushedAxis,60*vMax/radius))
-                .attr('fill',d=>colorScale(getY(d)))
+                .attr('d', d => makeVelocityGlyph(d,props.brushedAxis,vMax/radius))
+                .attr('fill',d=>colorScale(d.concentration))
                 .attr('stroke','black')
                 .attr('stroke-width',.1)
                 .attr('transform',d=>'translate(' + xScale(getX(d)) + ',' + yScale(getY(d)) + ')rotate('+calcVelocityAngle(d)+')')

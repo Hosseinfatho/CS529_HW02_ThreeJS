@@ -16,7 +16,7 @@ function App() {
 
   //TODO: Edit this to change the extents of the color scale for the linked view
   //saturated color scale used to color the particles
-  const colorRange = ['#c6dbef','#084594'];
+  const colorRange = ['#fff7bc','#d95f0e'];
 
   //how wide the 'brushed' area should be
   const brushedAreaThickness= .5;
