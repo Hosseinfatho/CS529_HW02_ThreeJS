@@ -20,11 +20,10 @@ function sliceVelocity(d,axis){
 //example function/code for making a custom glyph
 //d is the data point {position, velocity,concentration}, axis is ['x','y','z'], scale is optional value to pass to help scale the object size
 //Hint: you might need to pass an additional argument here to scale the new glyph with concentration
-function makeVelocityGlyph(d,axis,scale=1){
+function makeConcentrationGlyph(d,axis,scale=1){
     console.log("d",d)
     let [xv,yv] = sliceVelocity(d,axis);
     let concentration= d.concentration;
-    let velocity =scale*Math.sqrt(xv**2 + yv**2);
     //draws an arrow scaled by the velocity. we draw straight to the right and then rotate it using transforms
     let path = 'M ' + concentration + ',' + 0 + ' '
         + 0 + ',' + -Math.min(2,concentration/2) + ' '
@@ -35,6 +34,18 @@ function makeVelocityGlyph(d,axis,scale=1){
         'Z';
     //Hint: If you want to add something on top of the arrows, add the code for the new shape onto the path here;
     return path
+    
+}
+function makeVelocityGlyph(d,axis,scale=1){
+    console.log("d",d)
+    let [xv,yv] = sliceVelocity(d,axis);
+    let velocity =scale*Math.sqrt(xv**2 + yv**2);
+    //draws an arrow scaled by the velocity. we draw straight to the right and then rotate it using transforms
+    let path2 = 'M ' + velocity + ',' + 0 + ' '
+        + 0 + ',' + -Math.min(2,velocity/2) + ' '
+        + 0 + ',' + Math.min(2,velocity/2);
+    //Hint: If you want to add something on top of the arrows, add the code for the new shape onto the path here;
+    return path2
     
 }
 
@@ -94,7 +105,8 @@ export default function LinkedViewD3(props){
 
             //limit the data to a maximum size to prevent occlusion
             data.sort((a,b) => bDist(a) - bDist(b));
-            data = data.filter(d=>d.concentration < .8*bounds.maxC)
+            // 70
+            data = data.filter(d=>d.concentration < .7*bounds.maxC)
             if(data.length > maxDots){
                 data = data.slice(0,maxDots);
             }
@@ -116,11 +128,23 @@ export default function LinkedViewD3(props){
                 .range([height-margin-radius,margin+radius])
 
             //TODO: FIX THE EXTENTS (Hint: this should match the legend)
-            let colorScale = d3.scaleLinear()
-                .domain([0,bounds.maxC])
+            let colorScaleV = d3.scaleLinear()
+                .domain(yExtents)
                 .range(props.colorRange);
 
-            
+                let colorRange1 = ['blue', 'red']; // Example color range
+
+                let colorScaleC = d3.scaleLinear()
+                .domain(yExtents)
+                .range(colorRange1);
+
+// calculate angel
+function calcAngle(d) {
+    //  calculate angle based on a 'direction' property of the data point 'd'
+    // Assuming 'direction' is in radians
+    return d.direction * (180 / Math.PI); // Convert radians to degrees
+}
+
 
             //TODO: map the color of the glyph to the particle concentration instead of the particle height
             let dots = svg.selectAll('.glyph').data(data,d=>d.id)
@@ -128,12 +152,22 @@ export default function LinkedViewD3(props){
                 .attr('class','glyph')
                 .merge(dots)
                 .transition(100)
-                .attr('d', d => makeVelocityGlyph(d,props.brushedAxis,vMax/radius))
-                .attr('fill',d=>colorScale(d.concentration))
+                .attr('d', d => makeConcentrationGlyph(d,props.brushedAxis,vMax/radius))
+                .attr('fill',d=>colorScaleC(d.concentration))
                 .attr('stroke','black')
                 .attr('stroke-width',.1)
                 .attr('transform',d=>'translate(' + xScale(getX(d)) + ',' + yScale(getY(d)) + ')rotate('+calcVelocityAngle(d)+')')
+//
 
+                        dots.enter().append('path2')
+                            .attr('class', 'path2')
+                            .merge(dots.filter('.path2')) // Merge only elements with class 'path2'
+                            .transition(1)
+                            .attr('d', d => makeVelocityGlyph(d, props.brushedAxis, vMax / radius))
+                            .attr('fill', d => colorScaleV(d.velocity))
+                            .attr('stroke', 'black')
+                            .attr('stroke-width', .1)
+                            .attr('transform', d => 'translate(' + xScale(getX(d)) + ',' + yScale(getY(d)) + ')rotate(' + calcAngle(d) + ')');
             //Add a simple tooltip for debugging purposes
             dots.on('mouseover',(e,d)=>{
                     var [xv,yv] = sliceVelocity(d,props.brushedAxis);

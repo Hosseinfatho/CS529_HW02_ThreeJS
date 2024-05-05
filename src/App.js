@@ -23,7 +23,7 @@ function App() {
 
   //TODO: for extra credit, set this to false if you want to allow the cross-section plane (brushedAxis) to be toggleable in the Particle3D View
   //otherwise, fix the value to 'x' so the code in LinkedViewD3 doesn't break
-  const allowAxisToggle=true;
+  const allowAxisToggle=false;
 
   //here we parse the data as a list of objects
   //with values position ([x,y,z]), velocity ([x,y,z]) and concentration (number)
