@@ -22,16 +22,12 @@ function sliceVelocity(d,axis){
 //Hint: you might need to pass an additional argument here to scale the new glyph with concentration
 function makeConcentrationGlyph(d,axis,scale=1){
     console.log("d",d)
-    let [xv,yv] = sliceVelocity(d,axis);
+    //let [xv,yv] = sliceVelocity(d,axis);
     let concentration= d.concentration;
     //draws an arrow scaled by the velocity. we draw straight to the right and then rotate it using transforms
     let path = 'M ' + concentration + ',' + 0 + ' '
         + 0 + ',' + -Math.min(2,concentration/2) + ' '
-        + 0 + ',' + Math.min(2,concentration/2)+
-        'M ' + concentration + ',' + 0 + ' ' +
-        'L ' + (concentration - 4) + ',' + -3 + ' ' +
-        'L ' + (concentration - 4) + ',' + 3 + ' ' +
-        'Z';
+        + 0 + ',' + Math.min(2,concentration/2);
     //Hint: If you want to add something on top of the arrows, add the code for the new shape onto the path here;
     return path
     
@@ -128,31 +124,32 @@ export default function LinkedViewD3(props){
                 .range([height-margin-radius,margin+radius])
 
             //TODO: FIX THE EXTENTS (Hint: this should match the legend)
+            let colorRange = ['red','blue']; // Example color range
+
             let colorScaleV = d3.scaleLinear()
                 .domain(yExtents)
-                .range(props.colorRange);
+                .range(colorRange);
 
-                let colorRange1 = ['blue', 'red']; // Example color range
 
                 let colorScaleC = d3.scaleLinear()
-                .domain(yExtents)
-                .range(colorRange1);
+                .domain([0,bounds.maxC])
+                .range(colorRange);
 
 // calculate angel
+
 function calcAngle(d) {
-    //  calculate angle based on a 'direction' property of the data point 'd'
+    // Example: calculate angle based on a 'direction' property of the data point 'd'
     // Assuming 'direction' is in radians
     return d.direction * (180 / Math.PI); // Convert radians to degrees
 }
 
-
             //TODO: map the color of the glyph to the particle concentration instead of the particle height
-            let dots = svg.selectAll('.glyph').data(data,d=>d.id)
+            let dots = svg.selectAll('.glyph').data(data,d=>d.concentration)
             dots.enter().append('path')
                 .attr('class','glyph')
                 .merge(dots)
                 .transition(100)
-                .attr('d', d => makeConcentrationGlyph(d,props.brushedAxis,vMax/radius))
+                .attr('d', d => makeConcentrationGlyph(d,d.concentration,vMax/radius))
                 .attr('fill',d=>colorScaleC(d.concentration))
                 .attr('stroke','black')
                 .attr('stroke-width',.1)
